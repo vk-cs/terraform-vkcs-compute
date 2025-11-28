@@ -1,3 +1,5 @@
+![Beta Status](https://img.shields.io/badge/Status-Beta-yellow)
+
 # VKCS Networking Terraform module
 
 A Terraform module for creating compute resources in VKCS (VK Cloud Solutions).
