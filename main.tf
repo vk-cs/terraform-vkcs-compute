@@ -12,7 +12,7 @@ resource "vkcs_blockstorage_volume" "boot" {
   description       = var.boot_volume.description
   size              = var.boot_volume.size
   volume_type       = var.boot_volume.type
-  availability_zone = var.availability_zone
+  availability_zone = local.instance_availability_zones[count.index]
   image_id          = var.boot_volume.image_id
 }
 
@@ -23,7 +23,7 @@ resource "vkcs_blockstorage_volume" "data" {
   description       = var.data_volumes[count.index % length(var.data_volumes)].description
   size              = var.data_volumes[count.index % length(var.data_volumes)].size
   volume_type       = var.data_volumes[count.index % length(var.data_volumes)].type
-  availability_zone = var.availability_zone
+  availability_zone = local.instance_availability_zones[floor(count.index / length(var.data_volumes))]
 }
 
 resource "vkcs_compute_instance" "instances" {
@@ -32,7 +32,7 @@ resource "vkcs_compute_instance" "instances" {
   region            = var.region
   tags              = var.tags
   name              = "${var.name}-${count.index}"
-  availability_zone = var.availability_zone
+  availability_zone = local.instance_availability_zones[count.index]
   flavor_name       = var.flavor_name
   flavor_id         = var.flavor_id
   key_pair          = var.key_pair

@@ -9,9 +9,10 @@ output "backup_id" {
 output "instances" {
   value = [
     for idx, instance in vkcs_compute_instance.instances : {
-      instance_id    = instance.id
-      fixed_ip       = instance.network[0].fixed_ip_v4
-      boot_volume_id = try(vkcs_blockstorage_volume.boot[idx].id, null)
+      instance_id       = instance.id
+      fixed_ip          = instance.network[0].fixed_ip_v4
+      availability_zone = instance.availability_zone
+      boot_volume_id    = try(vkcs_blockstorage_volume.boot[idx].id, null)
       data_volume_ids = [
         for vol_idx, vol in vkcs_blockstorage_volume.data :
         vol.id if floor(vol_idx / length(var.data_volumes)) == idx
