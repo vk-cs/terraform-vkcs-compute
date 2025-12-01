@@ -3,6 +3,10 @@ module "compute" {
 
   instances_count = 3
 
+  # You can specify the `availability_zones` to distribute instances between them.
+  # If you want all resources to be created in a single AZ, specify a list with one element.
+  availability_zones = ["GZ1", "MS1", "ME1"]
+
   server_group = {
     name     = "server-group-tf-example"
     policies = ["anti-affinity"]
@@ -17,9 +21,8 @@ module "compute" {
     }
   }
 
-  name              = "compute-tf-example"
-  availability_zone = "GZ1"
-  flavor_name       = "Basic-1-2-20"
+  name        = "compute-tf-example"
+  flavor_name = "Basic-1-2-20"
 
   boot_volume = {
     tags        = ["boot"]

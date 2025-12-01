@@ -70,10 +70,14 @@ variable "name" {
   description = "Name for the compute resources."
 }
 
-variable "availability_zone" {
-  type        = string
-  description = "The availability zone in which to create the server."
-  default     = null
+variable "availability_zones" {
+  type        = list(string)
+  description = "List of availability zones for spreading instances."
+
+  validation {
+    condition     = length(var.availability_zones) > 0
+    error_message = "At least one availability zone must be specified."
+  }
 }
 
 variable "flavor_name" {
