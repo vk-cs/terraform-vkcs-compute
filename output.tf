@@ -1,9 +1,11 @@
 output "server_group_id" {
   value = vkcs_compute_servergroup.servergroup.id
+  description = "Id of the server group."
 }
 
 output "backup_id" {
   value = vkcs_backup_plan.backup_plan[0].id
+  description = "Id of the backup plan."
 }
 
 output "instances" {
@@ -19,4 +21,5 @@ output "instances" {
       ]
     }
   ]
+  description = "List of the instances info."
 }
