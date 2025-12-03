@@ -19,6 +19,7 @@ output "instances" {
         for vol_idx, vol in vkcs_blockstorage_volume.data :
         vol.id if floor(vol_idx / length(var.data_volumes)) == idx
       ]
+      password_data = instance.password_data
     }
   ]
   description = "List of the instances info."
