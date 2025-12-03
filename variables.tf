@@ -187,6 +187,11 @@ variable "vendor_options" {
     get_password_data           = optional(bool)
     ignore_resize_confirmation  = optional(bool)
   })
-  description = "Map of additional vendor-specific options."
-  default     = null
+  description = <<-EOT
+  Map of additional vendor-specific options.
+  `ignore_resize_confirmation` is `true` by default.
+  EOT
+  default = {
+    ignore_resize_confirmation = true
+  }
 }

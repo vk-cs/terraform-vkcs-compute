@@ -47,7 +47,7 @@ You can find examples in the [`examples`](./examples) directory.
 | <a name="input_server_group"></a> [server\_group](#input\_server\_group) | Configuration for creating a server group.<br/>`policy` needs for `vkcs_compute_servergroup.policies`<br/>See `vkcs_compute_servergroup` arguments. | <pre>object({<br/>    name   = string<br/>    policy = optional(set(string))<br/>  })</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A set of string tags for the instance. | `set(string)` | `[]` | no |
 | <a name="input_user_data"></a> [user\_data](#input\_user\_data) | The user data to provide when launching the instance. | `string` | `null` | no |
-| <a name="input_vendor_options"></a> [vendor\_options](#input\_vendor\_options) | Map of additional vendor-specific options. | <pre>object({<br/>    detach_ports_before_destroy = optional(bool)<br/>    get_password_data           = optional(bool)<br/>    ignore_resize_confirmation  = optional(bool)<br/>  })</pre> | `null` | no |
+| <a name="input_vendor_options"></a> [vendor\_options](#input\_vendor\_options) | Map of additional vendor-specific options.<br/>`ignore_resize_confirmation` is `true` by default. | <pre>object({<br/>    detach_ports_before_destroy = optional(bool)<br/>    get_password_data           = optional(bool)<br/>    ignore_resize_confirmation  = optional(bool)<br/>  })</pre> | <pre>{<br/>  "ignore_resize_confirmation": true<br/>}</pre> | no |
 
 ## Outputs
 

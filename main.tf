@@ -50,13 +50,10 @@ resource "vkcs_compute_instance" "instances" {
     }
   }
 
-  dynamic "vendor_options" {
-    for_each = var.vendor_options != null ? [1] : []
-    content {
-      detach_ports_before_destroy = var.vendor_options.detach_ports_before_destroy
-      get_password_data           = var.vendor_options.get_password_data
-      ignore_resize_confirmation  = var.vendor_options.ignore_resize_confirmation
-    }
+  vendor_options {
+    detach_ports_before_destroy = var.vendor_options.detach_ports_before_destroy
+    get_password_data           = var.vendor_options.get_password_data
+    ignore_resize_confirmation  = var.vendor_options.ignore_resize_confirmation
   }
 
   block_device {
