@@ -12,9 +12,16 @@ module "compute" {
     policies = ["anti-affinity"]
   }
 
-  backup = {
-    name            = "backup-tf-example"
-    max_full_backup = 25
+  # You can turn off the plan using `enable_backup_plan`.
+  # enable_backup_plan = false
+
+  # You don't have to set the backup_plan settings,
+  # then the default plan will be created.
+  backup_plan = {
+    name = "backup-tf-example"
+    full_retention = {
+      max_full_backup = 25
+    }
     schedule = {
       date = ["Mo"]
       time = "04:00+03"

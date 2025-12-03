@@ -1,10 +1,10 @@
 output "server_group_id" {
-  value = vkcs_compute_servergroup.servergroup.id
+  value       = vkcs_compute_servergroup.servergroup.id
   description = "Id of the server group."
 }
 
-output "backup_id" {
-  value = vkcs_backup_plan.backup_plan[0].id
+output "backup_plan_id" {
+  value       = var.enable_backup_plan ? vkcs_backup_plan.backup_plan[0].id : null
   description = "Id of the backup plan."
 }
 

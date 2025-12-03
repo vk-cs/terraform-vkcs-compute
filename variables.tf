@@ -1,3 +1,20 @@
+variable "region" {
+  type        = string
+  description = "The region in which to create the server instance."
+  default     = null
+}
+
+variable "name" {
+  type        = string
+  description = "Name for the compute resources."
+}
+
+variable "tags" {
+  type        = set(string)
+  description = "A set of string tags for the instance."
+  default     = []
+}
+
 variable "instances_count" {
   type        = number
   description = "Number of VM instances to create"
@@ -5,28 +22,59 @@ variable "instances_count" {
 
 variable "server_group" {
   type = object({
-    name        = string
-    policies    = optional(set(string))
-    region      = optional(string)
-    value_specs = optional(map(string))
+    name     = string
+    policies = optional(set(string))
   })
 
   description = "Configuration for creating a server group"
 }
 
-variable "backup" {
+variable "enable_backup_plan" {
+  type        = bool
+  description = <<-EOT
+  Enables or disables creation of backup plan.
+  If `true`: Creates backup plan using custom or default settings.
+  If `false`: No backup plan is created.
+  EOT
+  default     = true
+}
+
+variable "backup_plan" {
   type = object({
-    name = string
+    name               = string
+    incremental_backup = optional(bool, false)
     schedule = object({
       date        = optional(list(string))
       every_hours = optional(number)
       time        = optional(string)
     })
-    max_full_backup = optional(string)
-    provider_name   = optional(string)
+    full_retention = optional(object({
+      max_full_backup = number
+    }))
+    gfs_retention = optional(object({
+      gfs_weekly  = number
+      gfs_monthly = optional(number)
+      gfs_yearly  = optional(number)
+    }))
   })
-  description = "Configuration for backup plan. If null, backup plan will not be created"
-  default     = null
+  description = <<-EOT
+  Configuration for backup plan.
+  When `enable_backup_plan = true`:
+  - If this variable is set: Uses provided configuration
+  - If this variable is null: Uses default backup plan configuration
+  When `enable_backup_plan = false`: This variable is ignored
+  See `vkcs_backup_plan` arguments.
+  EOT
+  default = {
+    name = "default-backup-plan"
+    schedule = {
+      date = ["Mo"],
+      time = "04:00+03"
+    }
+    full_retention = {
+      max_full_backup = 25
+    }
+  }
 }
 
 variable "boot_volume" {
@@ -51,23 +99,6 @@ variable "data_volumes" {
   }))
   description = "List of data volume configurations."
   default     = null
-}
-
-variable "region" {
-  type        = string
-  description = "The region in which to create the server instance."
-  default     = null
-}
-
-variable "tags" {
-  type        = set(string)
-  description = "A set of string tags for the instance."
-  default     = []
-}
-
-variable "name" {
-  type        = string
-  description = "Name for the compute resources."
 }
 
 variable "availability_zones" {

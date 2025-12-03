@@ -1,8 +1,6 @@
 resource "vkcs_compute_servergroup" "servergroup" {
-  name        = var.server_group.name
-  policies    = var.server_group.policies
-  region      = var.region
-  value_specs = var.server_group.value_specs
+  name     = var.server_group.name
+  policies = var.server_group.policies
 }
 
 resource "vkcs_blockstorage_volume" "boot" {
@@ -39,6 +37,10 @@ resource "vkcs_compute_instance" "instances" {
   admin_pass        = var.admin_pass
   config_drive      = var.config_drive
   user_data         = var.user_data
+
+  scheduler_hints {
+    group = vkcs_compute_servergroup.servergroup.id
+  }
 
   dynamic "cloud_monitoring" {
     for_each = var.cloud_monitoring != null ? [1] : []
@@ -98,22 +100,14 @@ resource "vkcs_compute_instance" "instances" {
 }
 
 resource "vkcs_backup_plan" "backup_plan" {
-  count = var.backup != null ? 1 : 0
+  count = var.enable_backup_plan ? 1 : 0
 
-  name               = var.backup.name
+  name               = var.backup_plan.name
   provider_name      = "cloud_servers"
-  incremental_backup = true
+  incremental_backup = var.backup_plan.incremental_backup
   region             = var.region
-
-  schedule = {
-    date = var.backup.schedule.date
-    time = var.backup.schedule.time
-  }
-
-  full_retention = {
-    max_full_backup = var.backup.max_full_backup
-  }
-
-  instance_ids = vkcs_compute_instance.instances[*].id
+  instance_ids       = sort([for instance in vkcs_compute_instance.instances : instance.id])
+  schedule           = try(var.backup_plan.schedule, null)
+  full_retention     = try(var.backup_plan.full_retention, null)
+  gfs_retention      = try(var.backup_plan.gfs_retention, null)
 }
-
