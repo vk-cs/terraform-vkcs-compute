@@ -1,6 +1,6 @@
 resource "vkcs_compute_servergroup" "servergroup" {
   name     = var.server_group.name
-  policies = var.server_group.policies
+  policies = var.server_group.policy
 }
 
 resource "vkcs_blockstorage_volume" "boot" {

@@ -22,11 +22,14 @@ variable "instances_count" {
 
 variable "server_group" {
   type = object({
-    name     = string
-    policies = optional(set(string))
+    name   = string
+    policy = optional(set(string))
   })
-
-  description = "Configuration for creating a server group"
+  description = <<-EOT
+  Configuration for creating a server group.
+  `policy` needs for `vkcs_compute_servergroup.policies`
+  See `vkcs_compute_servergroup` arguments.
+  EOT
 }
 
 variable "enable_backup_plan" {
@@ -187,8 +190,3 @@ variable "vendor_options" {
   description = "Map of additional vendor-specific options."
   default     = null
 }
-
-
-
-
-

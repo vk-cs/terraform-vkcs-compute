@@ -8,8 +8,8 @@ module "compute" {
   availability_zones = ["GZ1", "MS1", "ME1"]
 
   server_group = {
-    name     = "server-group-tf-example"
-    policies = ["anti-affinity"]
+    name   = "server-group-tf-example"
+    policy = ["anti-affinity"]
   }
 
   # You can turn off the plan using `enable_backup_plan`.
