@@ -4,6 +4,12 @@ variable "region" {
   default     = null
 }
 
+variable "sdn" {
+  type        = string
+  description = "SDN to use for this resource."
+  default     = null
+}
+
 variable "name" {
   type        = string
   description = "Name for the compute resources."
@@ -169,15 +175,39 @@ variable "cloud_monitoring" {
   default     = null
 }
 
-variable "networks" {
+variable "ext_net_name" {
+  type        = string
+  description = <<-EOT
+  Name of the external network. Needs for create fips.
+  If not specified, fips will not be created.
+  EOT
+  default     = null
+}
+
+variable "ports" {
   type = list(object({
-    access_network = optional(bool)
-    fixed_ip_v4    = optional(string)
-    name           = optional(string)
-    port           = optional(string)
-    uuid           = optional(string)
+    network_id = string
+    allowed_address_pairs = optional(list(object({
+      ip_address  = string
+      mac_address = optional(string)
+    })))
+    description = optional(string)
+    dns_name    = optional(string)
+    fixed_ips = optional(list(object({
+      subnet_id  = string
+      ip_address = optional(string)
+    })))
+    full_security_groups_control = optional(bool, true)
+    mac_address                  = optional(string)
+    name                         = optional(string)
+    no_fixed_ip                  = optional(bool)
+    security_group_ids           = optional(list(string))
+    tags                         = optional(list(string))
   }))
-  description = "An array of one or more networks to attach to the instance."
+  description = <<-EOT
+  List of ports to create and attach to instances.
+  See `vkcs_networking_port` arguments.
+  EOT
   default     = []
 }
 

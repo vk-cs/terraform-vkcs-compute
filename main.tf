@@ -3,6 +3,48 @@ resource "vkcs_compute_servergroup" "servergroup" {
   policies = var.server_group.policy
 }
 
+resource "vkcs_networking_port" "instance_ports" {
+  count = var.instances_count * length(var.ports)
+
+  region                       = var.region
+  sdn                          = var.sdn
+  network_id                   = var.ports[count.index % length(var.ports)].network_id
+  name                         = var.ports[count.index % length(var.ports)].name
+  description                  = var.ports[count.index % length(var.ports)].description
+  dns_name                     = var.ports[count.index % length(var.ports)].dns_name
+  full_security_groups_control = var.ports[count.index % length(var.ports)].full_security_groups_control
+  security_group_ids           = var.ports[count.index % length(var.ports)].security_group_ids
+  mac_address                  = var.ports[count.index % length(var.ports)].mac_address
+  no_fixed_ip                  = var.ports[count.index % length(var.ports)].no_fixed_ip
+  tags                         = var.ports[count.index % length(var.ports)].tags
+
+  dynamic "fixed_ip" {
+    for_each = var.ports[count.index % length(var.ports)].fixed_ips != null ? var.ports[count.index % length(var.ports)].fixed_ips : []
+
+    content {
+      subnet_id  = fixed_ip.value.subnet_id
+      ip_address = fixed_ip.value.ip_address
+    }
+  }
+
+  dynamic "allowed_address_pairs" {
+    for_each = var.ports[count.index % length(var.ports)].allowed_address_pairs != null ? var.ports[count.index % length(var.ports)].allowed_address_pairs : []
+
+    content {
+      ip_address  = allowed_address_pairs.value.ip_address
+      mac_address = allowed_address_pairs.value.mac_address
+    }
+  }
+}
+
+resource "vkcs_networking_floatingip" "instance_fips" {
+  count = var.ext_net_name != null ? var.instances_count * length(var.ports) : 0
+
+  sdn     = var.sdn
+  pool    = var.ext_net_name
+  port_id = vkcs_networking_port.instance_ports[count.index].id
+}
+
 resource "vkcs_blockstorage_volume" "boot" {
   count = var.instances_count
 
@@ -77,13 +119,10 @@ resource "vkcs_compute_instance" "instances" {
   }
 
   dynamic "network" {
-    for_each = var.networks
+    for_each = { for idx, port in vkcs_networking_port.instance_ports : idx => port if floor(idx / length(var.ports)) == count.index }
+
     content {
-      access_network = network.value.access_network
-      fixed_ip_v4    = network.value.fixed_ip_v4
-      name           = network.value.name
-      port           = network.value.port
-      uuid           = network.value.uuid
+      port = network.value.id
     }
   }
 

@@ -1,5 +1,9 @@
+resource "vkcs_compute_keypair" "generated_key" {
+  name = "generated-key-tf-example"
+}
+
 module "compute" {
-  source = "../"
+  source = "../../"
 
   instances_count = 3
 
@@ -35,9 +39,9 @@ module "compute" {
     tags        = ["boot"]
     name        = "boot-disk"
     description = "Boot disk for VM"
-    image_id    = data.vkcs_images_image.debian.id
+    image_id    = data.vkcs_images_image.windows.id
     type        = "ceph-ssd"
-    size        = 10
+    size        = 40
   }
 
   data_volumes = [
@@ -50,9 +54,33 @@ module "compute" {
     }
   ]
 
-  networks = [
+  # need for creating fips
+  ext_net_name = "internet"
+  ports = [
     {
-      uuid = vkcs_networking_network.app.id
+      name               = "port-tf-example"
+      network_id         = vkcs_networking_network.app.id
+      security_group_ids = [vkcs_networking_secgroup.admin.id]
+      tags               = ["port", "tf-example"]
     }
   ]
+
+  # needs for windows password
+  key_pair = vkcs_compute_keypair.generated_key.name
+  vendor_options = {
+    get_password_data          = true,
+    ignore_resize_confirmation = true
+  }
+
+  depends_on = [vkcs_networking_router_interface.app]
+}
+
+output "windows_passwords" {
+  value = [
+    for i in range(length(module.compute.instances)) : {
+      instance_index = i
+      password       = rsadecrypt(module.compute.instances[i].password_data, vkcs_compute_keypair.generated_key.private_key)
+    }
+  ]
+  sensitive = true
 }

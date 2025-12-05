@@ -23,6 +23,8 @@ You can find examples in the [`examples`](./examples) directory.
 | [vkcs_blockstorage_volume.data](https://registry.terraform.io/providers/vk-cs/vkcs/latest/docs/resources/blockstorage_volume) | resource |
 | [vkcs_compute_instance.instances](https://registry.terraform.io/providers/vk-cs/vkcs/latest/docs/resources/compute_instance) | resource |
 | [vkcs_compute_servergroup.servergroup](https://registry.terraform.io/providers/vk-cs/vkcs/latest/docs/resources/compute_servergroup) | resource |
+| [vkcs_networking_floatingip.instance_fips](https://registry.terraform.io/providers/vk-cs/vkcs/latest/docs/resources/networking_floatingip) | resource |
+| [vkcs_networking_port.instance_ports](https://registry.terraform.io/providers/vk-cs/vkcs/latest/docs/resources/networking_port) | resource |
 
 ## Inputs
 
@@ -36,14 +38,16 @@ You can find examples in the [`examples`](./examples) directory.
 | <a name="input_config_drive"></a> [config\_drive](#input\_config\_drive) | Whether to use the config\_drive feature to configure the instance. | `bool` | `null` | no |
 | <a name="input_data_volumes"></a> [data\_volumes](#input\_data\_volumes) | List of data volume configurations. | <pre>list(object({<br/>    tags        = list(string)<br/>    name        = string<br/>    description = string<br/>    type        = string<br/>    size        = number<br/>  }))</pre> | `null` | no |
 | <a name="input_enable_backup_plan"></a> [enable\_backup\_plan](#input\_enable\_backup\_plan) | Enables or disables creation of backup plan.<br/>If `true`: Creates backup plan using custom or default settings.<br/>If `false`: No backup plan is created. | `bool` | `true` | no |
+| <a name="input_ext_net_name"></a> [ext\_net\_name](#input\_ext\_net\_name) | Name of the external network. Needs for create fips.<br/>If not specified, fips will not be created. | `string` | `null` | no |
 | <a name="input_flavor_id"></a> [flavor\_id](#input\_flavor\_id) | The flavor ID of the desired flavor for the server. Required if flavor\_name is empty. | `string` | `null` | no |
 | <a name="input_flavor_name"></a> [flavor\_name](#input\_flavor\_name) | The name of the desired flavor for the server. Required if flavor\_id is empty. | `string` | `null` | no |
 | <a name="input_instances_count"></a> [instances\_count](#input\_instances\_count) | Number of VM instances to create | `number` | n/a | yes |
 | <a name="input_key_pair"></a> [key\_pair](#input\_key\_pair) | The name of a key pair to put on the server. | `string` | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | Name for the compute resources. | `string` | n/a | yes |
-| <a name="input_networks"></a> [networks](#input\_networks) | An array of one or more networks to attach to the instance. | <pre>list(object({<br/>    access_network = optional(bool)<br/>    fixed_ip_v4    = optional(string)<br/>    name           = optional(string)<br/>    port           = optional(string)<br/>    uuid           = optional(string)<br/>  }))</pre> | `[]` | no |
 | <a name="input_personality"></a> [personality](#input\_personality) | Customize the personality of an instance by defining one or more files and their contents. | <pre>list(object({<br/>    content = string<br/>    file    = string<br/>  }))</pre> | `null` | no |
+| <a name="input_ports"></a> [ports](#input\_ports) | List of ports to create and attach to instances.<br/>See `vkcs_networking_port` arguments. | <pre>list(object({<br/>    network_id = string<br/>    allowed_address_pairs = optional(list(object({<br/>      ip_address  = string<br/>      mac_address = optional(string)<br/>    })))<br/>    description = optional(string)<br/>    dns_name    = optional(string)<br/>    fixed_ips = optional(list(object({<br/>      subnet_id  = string<br/>      ip_address = optional(string)<br/>    })))<br/>    full_security_groups_control = optional(bool, true)<br/>    mac_address                  = optional(string)<br/>    name                         = optional(string)<br/>    no_fixed_ip                  = optional(bool)<br/>    security_group_ids           = optional(list(string))<br/>    tags                         = optional(list(string))<br/>  }))</pre> | `[]` | no |
 | <a name="input_region"></a> [region](#input\_region) | The region in which to create the server instance. | `string` | `null` | no |
+| <a name="input_sdn"></a> [sdn](#input\_sdn) | SDN to use for this resource. | `string` | `null` | no |
 | <a name="input_server_group"></a> [server\_group](#input\_server\_group) | Configuration for creating a server group.<br/>`policy` needs for `vkcs_compute_servergroup.policies`<br/>See `vkcs_compute_servergroup` arguments. | <pre>object({<br/>    name   = string<br/>    policy = optional(set(string))<br/>  })</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A set of string tags for the instance. | `set(string)` | `[]` | no |
 | <a name="input_user_data"></a> [user\_data](#input\_user\_data) | The user data to provide when launching the instance. | `string` | `null` | no |
