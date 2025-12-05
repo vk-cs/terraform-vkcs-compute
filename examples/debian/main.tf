@@ -3,6 +3,14 @@ module "compute" {
 
   instances_count = 3
 
+  # You can omit the resource names, and this name will be used for them.
+  name = "compute-tf-example"
+
+  flavor_name = "Basic-1-2-20"
+
+  # tags will be added to resource's tags.
+  tags = ["compute-tf-example"]
+
   # You can specify the `availability_zones` to distribute instances between them.
   # If you want all resources to be created in a single AZ, specify a list with one element.
   availability_zones = ["GZ1", "MS1", "ME1"]
@@ -28,11 +36,7 @@ module "compute" {
     }
   }
 
-  name        = "compute-tf-example"
-  flavor_name = "Basic-1-2-20"
-
   boot_volume = {
-    tags        = ["boot"]
     name        = "boot-disk"
     description = "Boot disk for VM"
     image_id    = data.vkcs_images_image.debian.id
@@ -42,7 +46,6 @@ module "compute" {
 
   data_volumes = [
     {
-      tags        = ["data"]
       name        = "data-disk"
       description = "Extra data disk"
       type        = "ceph-ssd"
@@ -52,6 +55,7 @@ module "compute" {
 
   # need for creating fips
   ext_net_name = "internet"
+
   ports = [
     {
       name               = "port-tf-example"

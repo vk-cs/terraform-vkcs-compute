@@ -1,22 +1,32 @@
 resource "vkcs_compute_servergroup" "servergroup" {
-  name     = var.server_group.name
+  name = try(var.server_group.name, null) != null ? (
+    var.server_group.name
+    ) : (
+    var.name
+  )
+
   policies = var.server_group.policy
 }
 
 resource "vkcs_networking_port" "instance_ports" {
   count = var.instances_count * length(var.ports)
 
+  name = try(var.ports[count.index % length(var.ports)].name, null) != null ? (
+    "${var.ports[count.index % length(var.ports)].name}-${floor(count.index / length(var.ports))}-${count.index % length(var.ports)}"
+    ) : (
+    "${var.name}-${floor(count.index / length(var.ports))}-${count.index % length(var.ports)}"
+  )
+
   region                       = var.region
   sdn                          = var.sdn
   network_id                   = var.ports[count.index % length(var.ports)].network_id
-  name                         = var.ports[count.index % length(var.ports)].name
   description                  = var.ports[count.index % length(var.ports)].description
   dns_name                     = var.ports[count.index % length(var.ports)].dns_name
   full_security_groups_control = var.ports[count.index % length(var.ports)].full_security_groups_control
   security_group_ids           = var.ports[count.index % length(var.ports)].security_group_ids
   mac_address                  = var.ports[count.index % length(var.ports)].mac_address
   no_fixed_ip                  = var.ports[count.index % length(var.ports)].no_fixed_ip
-  tags                         = var.ports[count.index % length(var.ports)].tags
+  tags                         = setunion(var.tags, coalesce(var.ports[count.index % length(var.ports)].tags, []))
 
   dynamic "fixed_ip" {
     for_each = var.ports[count.index % length(var.ports)].fixed_ips != null ? var.ports[count.index % length(var.ports)].fixed_ips : []
@@ -48,7 +58,12 @@ resource "vkcs_networking_floatingip" "instance_fips" {
 resource "vkcs_blockstorage_volume" "boot" {
   count = var.instances_count
 
-  name              = "${var.boot_volume.name}-${count.index}"
+  name = try(var.boot_volume.name, null) != null ? (
+    "${var.boot_volume.name}-${count.index}"
+    ) : (
+    "${var.name}-${count.index}"
+  )
+
   description       = var.boot_volume.description
   size              = var.boot_volume.size
   volume_type       = var.boot_volume.type
@@ -59,7 +74,12 @@ resource "vkcs_blockstorage_volume" "boot" {
 resource "vkcs_blockstorage_volume" "data" {
   count = length(var.data_volumes) * var.instances_count
 
-  name              = "${var.boot_volume.name}-${count.index}"
+  name = try(var.data_volumes[count.index % length(var.data_volumes)].name, null) != null ? (
+    "${var.data_volumes[count.index % length(var.data_volumes)].name}-${floor(count.index / length(var.data_volumes))}-${count.index % length(var.data_volumes)}"
+    ) : (
+    "${var.name}-${floor(count.index / length(var.data_volumes))}-${count.index % length(var.data_volumes)}"
+  )
+
   description       = var.data_volumes[count.index % length(var.data_volumes)].description
   size              = var.data_volumes[count.index % length(var.data_volumes)].size
   volume_type       = var.data_volumes[count.index % length(var.data_volumes)].type
@@ -138,7 +158,10 @@ resource "vkcs_compute_instance" "instances" {
 resource "vkcs_backup_plan" "backup_plan" {
   count = var.enable_backup_plan ? 1 : 0
 
-  name               = var.backup_plan.name
+  name = (
+    try(var.backup_plan.name, null) != null ? var.backup_plan.name : var.name
+  )
+
   provider_name      = "cloud_servers"
   incremental_backup = var.backup_plan.incremental_backup
   region             = var.region

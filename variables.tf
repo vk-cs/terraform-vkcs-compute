@@ -12,12 +12,15 @@ variable "sdn" {
 
 variable "name" {
   type        = string
-  description = "Name for the compute resources."
+  description = <<-EOT
+  Name for instances and module resources.
+  You can omit the resource names, and this name will be used for them.
+  EOT
 }
 
 variable "tags" {
   type        = set(string)
-  description = "A set of string tags for the instance."
+  description = "Tags for the instance. These tags will be added to resource's tags."
   default     = []
 }
 
@@ -28,7 +31,7 @@ variable "instances_count" {
 
 variable "server_group" {
   type = object({
-    name   = string
+    name   = optional(string)
     policy = optional(set(string))
   })
   description = <<-EOT
@@ -50,7 +53,7 @@ variable "enable_backup_plan" {
 
 variable "backup_plan" {
   type = object({
-    name               = string
+    name               = optional(string)
     incremental_backup = optional(bool, false)
     schedule = object({
       date        = optional(list(string))
@@ -88,25 +91,29 @@ variable "backup_plan" {
 
 variable "boot_volume" {
   type = object({
-    tags        = list(string)
-    name        = string
-    description = string
+    name        = optional(string)
+    description = optional(string)
     type        = string
     size        = number
     image_id    = string
   })
-  description = "Configuration for the boot volume."
+  description = <<-EOT
+  Configuration for the boot volume.
+  Names will be {name}-{instance_index}.
+  EOT
 }
 
 variable "data_volumes" {
   type = list(object({
-    tags        = list(string)
-    name        = string
-    description = string
+    name        = optional(string)
+    description = optional(string)
     type        = string
     size        = number
   }))
-  description = "List of data volume configurations."
+  description = <<-EOT
+  List of data volume configurations.
+  Names will be {name}-{instance_index}-{volume_index}.
+  EOT
   default     = null
 }
 
@@ -207,6 +214,7 @@ variable "ports" {
   description = <<-EOT
   List of ports to create and attach to instances.
   See `vkcs_networking_port` arguments.
+  Names will be {name}-{instance_index}-{port_index}.
   EOT
   default     = []
 }
