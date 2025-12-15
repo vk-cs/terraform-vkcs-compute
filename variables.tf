@@ -29,9 +29,13 @@ variable "cluster" {
   })
   description = <<-EOT
   Settings to create a scalable cluster of identical VMs.
+
   `count` - count of VMs in the cluster.
+
   `servergroup_name` - name of a server group. Requires `servergroup_policy` to be set. If not set it is assigned to `name` module variable.
+
   `servergroup_policy` - server group policy. See `vkcs_compute_servergroup`'s `policy` argument for available values. If no specified the server group is not created.
+
   `availability_zones` - list of availability zones to spread VMs. If no specified `availability_zone` must be set at the root level. If the list contains lesser elements that cluster.size, the elements are used for VMs in cycle.
   EOT
   default     = null
@@ -123,10 +127,15 @@ variable "ports" {
   }))
   description = <<-EOT
   List of ports to create and attach to instances.
+
   See `vkcs_networking_port` arguments for details. If name is not set it is assigned to `name` module variable.
+
   `subnet_id` and `ip_address` - arguments for the first `fixed_ips` element in `vkcs_networking_port`. Next elements are not supported by the module.
+
   `floatingip_pool` - allocate and associate floating IP to the port. Specify external network name or set `true` if the only external netwrok is available in the project.
+
   `floatingip_description` - `description` argument for `vkcs_networking_floatingip` resource.
+
   At least one port must be specified.
   EOT
 
@@ -208,6 +217,7 @@ variable "vendor_options" {
   })
   description = <<-EOT
   Map of additional vendor-specific options.
+
   `ignore_resize_confirmation` is `true` by default.
   EOT
   default = {
@@ -235,6 +245,7 @@ variable "backup_plan" {
   })
   description = <<-EOT
   Configuration for backup plan.
+
   See `vkcs_backup_plan` arguments. If name is not set it is assigned to `name` module variable.
   EOT
   default = {
