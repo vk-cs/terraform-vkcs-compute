@@ -1,0 +1,73 @@
+formatter: "markdown"
+
+version: ">= 0.20"
+
+output:
+  file: "README.md"
+  mode: replace
+
+sort:
+  enabled: false
+
+settings:
+  anchor: true
+  default: true
+  escape: true
+  hide-empty: true
+  html: true
+  indent: 2
+  lockfile: true
+  read-comments: true
+  required: true
+  sensitive: true
+  type: true
+
+sections:
+  hide:
+    - data-sources
+
+content: |-
+  ![Beta Status](https://img.shields.io/badge/Status-Beta-yellow)
+
+  # VKCS Compute Terraform module
+  A Terraform module for `Compute` in VKCS.
+
+  This modules makes it easy to setup virtual machines in VKCS.
+
+  It supports creating:
+  - compute servergroup
+  - compute instances
+  - blockstorage volumes
+  - network ports
+  - network floatingips (associated with the ports)
+  - backup plan
+
+  It does not support:
+  - multiple IPs on one ports
+  - adding new ports
+  - adding new volumes
+
+  ## Usage
+  ### Enable all traffic
+  ```hcl
+  {{ include "examples/simple/main.tf" }}
+  ```
+
+  ## Examples
+  You can find examples in the [`examples`](./examples) directory on [GitHub](https://github.com/vk-cs/terraform-vkcs-compute/tree/v0.0.1/examples).
+
+  Running an example:
+  - Clone [GitHub repository](https://github.com/vk-cs/terraform-vkcs-compute/v0.0.1/main)
+  - [Install Terraform](https://cloud.vk.com/docs/en/tools-for-using-services/terraform/quick-start). **Note**: You do not need `vkcs_provider.tf` to run module example.
+  - [Init Terraform](https://cloud.vk.com/docs/en/tools-for-using-services/terraform/quick-start#terraform_initialization) from the example folder.
+  - [Run Terraform](https://cloud.vk.com/docs/en/tools-for-using-services/terraform/quick-start#creating_resources_via_terraform) to create example resources.
+  - Check example output and explore created resources with `terraform show`, management console, CLI and API requests.
+  - Remove example resources with `terraform destroy -auto-approve --refresh=false`
+
+  {{ .Requirements }}
+
+  {{ .Resources }}
+
+  {{ .Inputs }}
+
+  {{ .Outputs }}

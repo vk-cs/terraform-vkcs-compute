@@ -1,36 +1,49 @@
 resource "vkcs_compute_servergroup" "servergroup" {
-  name = try(var.server_group.name, null) != null ? (
-    var.server_group.name
-    ) : (
-    var.name
-  )
+  count = var.cluster != null && var.cluster.servergroup_policy != null ? 1 : 0
 
-  policies = var.server_group.policy
+  region   = var.region
+  name     = coalesce(try(var.cluster.servergroup_name, ""), var.name)
+  policies = [var.cluster.servergroup_policy]
 }
 
-resource "vkcs_networking_port" "instance_ports" {
-  count = var.instances_count * length(var.ports)
+resource "vkcs_blockstorage_volume" "volumes" {
+  for_each = { for p in local.all_volumes : p.volume_key => p }
 
-  name = try(var.ports[count.index % length(var.ports)].name, null) != null ? (
-    "${var.ports[count.index % length(var.ports)].name}-${floor(count.index / length(var.ports))}-${count.index % length(var.ports)}"
-    ) : (
-    "${var.name}-${floor(count.index / length(var.ports))}-${count.index % length(var.ports)}"
-  )
+  region = var.region
+  name = join("", [
+    coalesce(each.value.name, var.name),
+    "%{if var.cluster != null}-${each.value.instance_idx}%{else}%{endif}",
+    "%{if !can(coalesce(each.value.name))}-${each.value.volume_idx}%{else}%{endif}"
+  ])
+  description       = each.value.description
+  availability_zone = local.instance_availability_zones[each.value.instance_idx]
+  volume_type       = each.value.type
+  size              = each.value.size
+  image_id          = each.value.image_id
+}
 
+resource "vkcs_networking_port" "ports" {
+  for_each = { for p in local.all_ports : p.port_key => p }
+
+  network_id                   = each.value.network_id
+  full_security_groups_control = true
   region                       = var.region
-  sdn                          = var.sdn
-  network_id                   = var.ports[count.index % length(var.ports)].network_id
-  description                  = var.ports[count.index % length(var.ports)].description
-  dns_name                     = var.ports[count.index % length(var.ports)].dns_name
-  full_security_groups_control = var.ports[count.index % length(var.ports)].full_security_groups_control
-  security_group_ids           = var.ports[count.index % length(var.ports)].security_group_ids
-  mac_address                  = var.ports[count.index % length(var.ports)].mac_address
-  no_fixed_ip                  = var.ports[count.index % length(var.ports)].no_fixed_ip
-  tags                         = setunion(var.tags, coalesce(var.ports[count.index % length(var.ports)].tags, []))
+  tags                         = setunion(var.tags, coalesce(each.value.tags, []))
+  name = join("", [
+    coalesce(each.value.name, var.name),
+    "%{if var.cluster != null}-${each.value.instance_idx}%{else}%{endif}",
+    "%{if !can(coalesce(each.value.name))}-${each.value.port_idx}%{else}%{endif}"
+  ])
+  description        = each.value.description
+  security_group_ids = each.value.security_group_ids
+  mac_address        = each.value.mac_address
 
   dynamic "fixed_ip" {
-    for_each = var.ports[count.index % length(var.ports)].fixed_ips != null ? var.ports[count.index % length(var.ports)].fixed_ips : []
-
+    for_each = (
+      each.value.subnet_id != null ?
+      [each.value] :
+      []
+    )
     content {
       subnet_id  = fixed_ip.value.subnet_id
       ip_address = fixed_ip.value.ip_address
@@ -38,8 +51,11 @@ resource "vkcs_networking_port" "instance_ports" {
   }
 
   dynamic "allowed_address_pairs" {
-    for_each = var.ports[count.index % length(var.ports)].allowed_address_pairs != null ? var.ports[count.index % length(var.ports)].allowed_address_pairs : []
-
+    for_each = (
+      each.value.allowed_address_pairs != null ?
+      each.value.allowed_address_pairs :
+      []
+    )
     content {
       ip_address  = allowed_address_pairs.value.ip_address
       mac_address = allowed_address_pairs.value.mac_address
@@ -47,126 +63,108 @@ resource "vkcs_networking_port" "instance_ports" {
   }
 }
 
-resource "vkcs_networking_floatingip" "instance_fips" {
-  count = var.ext_net_name != null ? var.instances_count * length(var.ports) : 0
+resource "vkcs_networking_floatingip" "floatingips" {
+  for_each = {
+    for p in local.all_ports : p.port_key => p
+    if p.floatingip_pool != null && p.floatingip_pool != false
+  }
 
-  sdn     = var.sdn
-  pool    = var.ext_net_name
-  port_id = vkcs_networking_port.instance_ports[count.index].id
-}
-
-resource "vkcs_blockstorage_volume" "boot" {
-  count = var.instances_count
-
-  name = try(var.boot_volume.name, null) != null ? (
-    "${var.boot_volume.name}-${count.index}"
-    ) : (
-    "${var.name}-${count.index}"
+  region = var.region
+  pool = (
+    (
+      each.value.floatingip_pool == true &&
+      # not required at all but this is workaround of TF bug:
+      # if evaluation of data.vkcs_networking_network.pools is postponed to apply stage
+      # TF evaluates pool argument to null and passes it to the resource which produces an error
+      vkcs_networking_port.ports[each.key].id != null
+    ) ?
+    data.vkcs_networking_network.pools[each.value.port_idx].name :
+    each.value.floatingip_pool
   )
-
-  description       = var.boot_volume.description
-  size              = var.boot_volume.size
-  volume_type       = var.boot_volume.type
-  availability_zone = local.instance_availability_zones[count.index]
-  image_id          = var.boot_volume.image_id
-}
-
-resource "vkcs_blockstorage_volume" "data" {
-  count = length(var.data_volumes) * var.instances_count
-
-  name = try(var.data_volumes[count.index % length(var.data_volumes)].name, null) != null ? (
-    "${var.data_volumes[count.index % length(var.data_volumes)].name}-${floor(count.index / length(var.data_volumes))}-${count.index % length(var.data_volumes)}"
-    ) : (
-    "${var.name}-${floor(count.index / length(var.data_volumes))}-${count.index % length(var.data_volumes)}"
-  )
-
-  description       = var.data_volumes[count.index % length(var.data_volumes)].description
-  size              = var.data_volumes[count.index % length(var.data_volumes)].size
-  volume_type       = var.data_volumes[count.index % length(var.data_volumes)].type
-  availability_zone = local.instance_availability_zones[floor(count.index / length(var.data_volumes))]
+  port_id = vkcs_networking_port.ports[each.key].id
+  description = each.value.floatingip_description
 }
 
 resource "vkcs_compute_instance" "instances" {
-  count = var.instances_count
+  count = local.instance_count
 
   region            = var.region
   tags              = var.tags
-  name              = "${var.name}-${count.index}"
+  name              = var.cluster == null ? var.name : "${var.name}-${count.index}"
   availability_zone = local.instance_availability_zones[count.index]
   flavor_name       = var.flavor_name
   flavor_id         = var.flavor_id
   key_pair          = var.key_pair
-  admin_pass        = var.admin_pass
   config_drive      = var.config_drive
   user_data         = var.user_data
+  admin_pass        = var.admin_pass
 
-  scheduler_hints {
-    group = vkcs_compute_servergroup.servergroup.id
+  dynamic "scheduler_hints" {
+    for_each = length(vkcs_compute_servergroup.servergroup) > 0 ? [1] : []
+
+    content {
+      group = vkcs_compute_servergroup.servergroup[0].id
+    }
+  }
+
+  dynamic "block_device" {
+    for_each = { for v in local.all_volumes : v.volume_key => v if v.instance_idx == count.index }
+
+    content {
+      source_type           = "volume"
+      destination_type      = "volume"
+      uuid                  = vkcs_blockstorage_volume.volumes[block_device.key].id
+      boot_index            = block_device.value.volume_idx == 0 ? 0 : -1
+      delete_on_termination = false
+    }
+  }
+
+  dynamic "network" {
+    for_each = { for p in local.all_ports : p.port_key => p if p.instance_idx == count.index }
+
+    content {
+      port = vkcs_networking_port.ports[network.key].id
+    }
   }
 
   dynamic "cloud_monitoring" {
     for_each = var.cloud_monitoring != null ? [1] : []
+
     content {
       script          = var.cloud_monitoring.script
       service_user_id = var.cloud_monitoring.service_user_id
     }
   }
 
-  vendor_options {
-    detach_ports_before_destroy = var.vendor_options.detach_ports_before_destroy
-    get_password_data           = var.vendor_options.get_password_data
-    ignore_resize_confirmation  = var.vendor_options.ignore_resize_confirmation
-  }
-
-  block_device {
-    source_type           = "volume"
-    boot_index            = 0
-    uuid                  = vkcs_blockstorage_volume.boot[count.index].id
-    destination_type      = "volume"
-    delete_on_termination = false
-  }
-
-  dynamic "block_device" {
-    for_each = { for idx, vol in vkcs_blockstorage_volume.data : idx => vol if floor(idx / length(var.data_volumes)) == count.index }
-
-    content {
-      source_type           = "volume"
-      boot_index            = -1
-      uuid                  = block_device.value.id
-      destination_type      = "volume"
-      delete_on_termination = false
-    }
-  }
-
-  dynamic "network" {
-    for_each = { for idx, port in vkcs_networking_port.instance_ports : idx => port if floor(idx / length(var.ports)) == count.index }
-
-    content {
-      port = network.value.id
-    }
-  }
-
   dynamic "personality" {
     for_each = var.personality != null ? var.personality : []
+
     content {
       file    = personality.value.file
       content = personality.value.content
     }
   }
+
+  dynamic "vendor_options" {
+    for_each = var.vendor_options != null ? [1] : []
+
+    content {
+      detach_ports_before_destroy = var.vendor_options.detach_ports_before_destroy
+      get_password_data           = var.vendor_options.get_password_data
+      ignore_resize_confirmation  = var.vendor_options.ignore_resize_confirmation
+    }
+  }
 }
 
 resource "vkcs_backup_plan" "backup_plan" {
-  count = var.enable_backup_plan ? 1 : 0
+  count = var.backup_plan != null ? 1 : 0
 
-  name = (
-    try(var.backup_plan.name, null) != null ? var.backup_plan.name : var.name
-  )
-
-  provider_name      = "cloud_servers"
-  incremental_backup = var.backup_plan.incremental_backup
   region             = var.region
-  instance_ids       = sort([for instance in vkcs_compute_instance.instances : instance.id])
-  schedule           = try(var.backup_plan.schedule, null)
-  full_retention     = try(var.backup_plan.full_retention, null)
-  gfs_retention      = try(var.backup_plan.gfs_retention, null)
+  name               = coalesce(var.backup_plan.name, var.name)
+  provider_name      = "cloud_servers"
+  instance_ids       = vkcs_compute_instance.instances[*].id
+  incremental_backup = var.backup_plan.incremental_backup
+  schedule           = var.backup_plan.schedule
+  full_retention     = var.backup_plan.full_retention
+  gfs_retention      = var.backup_plan.gfs_retention
 }

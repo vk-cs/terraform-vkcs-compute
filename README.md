@@ -2,62 +2,101 @@
 ![Beta Status](https://img.shields.io/badge/Status-Beta-yellow)
 
 # VKCS Compute Terraform module
-A Terraform module for creating `Compute` in VKCS.
+A Terraform module for `Compute` in VKCS.
+
+This modules makes it easy to setup virtual machines in VKCS.
+
+It supports creating:
+- compute servergroup
+- compute instances
+- blockstorage volumes
+- network ports
+- network floatingips (associated with the ports)
+- backup plan
+
+It does not support:
+- multiple IPs on one ports
+- adding new ports
+- adding new volumes
+
+## Usage
+### Enable all traffic
+```hcl
+module "simple_compute" {
+  source = "../../"
+
+  name              = "simple-compute-tf-example"
+  availability_zone = "GZ1"
+  flavor_name       = "STD3-1-2"
+  volumes = [{
+    image_id = data.vkcs_images_image.debian.id
+    type     = "ceph-ssd"
+    size     = 10
+  }]
+  ports = [{
+    network_id         = module.network.networks[0].id
+    security_group_ids = [module.firewall_all.secgroup_id]
+    floatingip_pool    = true
+  }]
+}
+```
 
 ## Examples
-You can find examples in the [`examples`](./examples) directory.
+You can find examples in the [`examples`](./examples) directory on [GitHub](https://github.com/vk-cs/terraform-vkcs-compute/tree/v0.0.1/examples).
+
+Running an example:
+- Clone [GitHub repository](https://github.com/vk-cs/terraform-vkcs-compute/v0.0.1/main)
+- [Install Terraform](https://cloud.vk.com/docs/en/tools-for-using-services/terraform/quick-start). **Note**: You do not need `vkcs_provider.tf` to run module example.
+- [Init Terraform](https://cloud.vk.com/docs/en/tools-for-using-services/terraform/quick-start#terraform_initialization) from the example folder.
+- [Run Terraform](https://cloud.vk.com/docs/en/tools-for-using-services/terraform/quick-start#creating_resources_via_terraform) to create example resources.
+- Check example output and explore created resources with `terraform show`, management console, CLI and API requests.
+- Remove example resources with `terraform destroy -auto-approve --refresh=false`
 
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3 |
-| <a name="requirement_vkcs"></a> [vkcs](#requirement\_vkcs) | < 1.0.0 |
+| <a name="requirement_vkcs"></a> [vkcs](#requirement\_vkcs) | >= 0.13.1, < 1.0.0 |
 
 ## Resources
 
 | Name | Type |
 |------|------|
 | [vkcs_backup_plan.backup_plan](https://registry.terraform.io/providers/vk-cs/vkcs/latest/docs/resources/backup_plan) | resource |
-| [vkcs_blockstorage_volume.boot](https://registry.terraform.io/providers/vk-cs/vkcs/latest/docs/resources/blockstorage_volume) | resource |
-| [vkcs_blockstorage_volume.data](https://registry.terraform.io/providers/vk-cs/vkcs/latest/docs/resources/blockstorage_volume) | resource |
+| [vkcs_blockstorage_volume.volumes](https://registry.terraform.io/providers/vk-cs/vkcs/latest/docs/resources/blockstorage_volume) | resource |
 | [vkcs_compute_instance.instances](https://registry.terraform.io/providers/vk-cs/vkcs/latest/docs/resources/compute_instance) | resource |
 | [vkcs_compute_servergroup.servergroup](https://registry.terraform.io/providers/vk-cs/vkcs/latest/docs/resources/compute_servergroup) | resource |
-| [vkcs_networking_floatingip.instance_fips](https://registry.terraform.io/providers/vk-cs/vkcs/latest/docs/resources/networking_floatingip) | resource |
-| [vkcs_networking_port.instance_ports](https://registry.terraform.io/providers/vk-cs/vkcs/latest/docs/resources/networking_port) | resource |
+| [vkcs_networking_floatingip.floatingips](https://registry.terraform.io/providers/vk-cs/vkcs/latest/docs/resources/networking_floatingip) | resource |
+| [vkcs_networking_port.ports](https://registry.terraform.io/providers/vk-cs/vkcs/latest/docs/resources/networking_port) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_admin_pass"></a> [admin\_pass](#input\_admin\_pass) | The administrative password to assign to the server. | `string` | `null` | no |
-| <a name="input_availability_zones"></a> [availability\_zones](#input\_availability\_zones) | List of availability zones for spreading instances. | `list(string)` | n/a | yes |
-| <a name="input_backup_plan"></a> [backup\_plan](#input\_backup\_plan) | Configuration for backup plan.<br/>When `enable_backup_plan = true`:<br/>- If this variable is set: Uses provided configuration<br/>- If this variable is null: Uses default backup plan configuration<br/>When `enable_backup_plan = false`: This variable is ignored<br/>See `vkcs_backup_plan` arguments. | <pre>object({<br/>    name               = optional(string)<br/>    incremental_backup = optional(bool, false)<br/>    schedule = object({<br/>      date        = optional(list(string))<br/>      every_hours = optional(number)<br/>      time        = optional(string)<br/>    })<br/>    full_retention = optional(object({<br/>      max_full_backup = number<br/>    }))<br/>    gfs_retention = optional(object({<br/>      gfs_weekly  = number<br/>      gfs_monthly = optional(number)<br/>      gfs_yearly  = optional(number)<br/>    }))<br/>  })</pre> | <pre>{<br/>  "full_retention": {<br/>    "max_full_backup": 25<br/>  },<br/>  "name": "default-backup-plan",<br/>  "schedule": {<br/>    "date": [<br/>      "Mo"<br/>    ],<br/>    "time": "04:00+03"<br/>  }<br/>}</pre> | no |
-| <a name="input_boot_volume"></a> [boot\_volume](#input\_boot\_volume) | Configuration for the boot volume.<br/>Names will be {name}-{instance\_index}. | <pre>object({<br/>    name        = optional(string)<br/>    description = optional(string)<br/>    type        = string<br/>    size        = number<br/>    image_id    = string<br/>  })</pre> | n/a | yes |
+| <a name="input_region"></a> [region](#input\_region) | The region in which to create module resources. | `string` | `null` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | Default set of module resources tags. | `set(string)` | `[]` | no |
+| <a name="input_name"></a> [name](#input\_name) | Default name for module resources. Used when name is not specified for a resource. | `string` | n/a | yes |
+| <a name="input_cluster"></a> [cluster](#input\_cluster) | Settings to create a scalable cluster of identical VMs.<br/>`count` - count of VMs in the cluster.<br/>`servergroup_name` - name of a server group. Requires `servergroup_policy` to be set. If not set it is assigned to `name` module variable.<br/>`servergroup_policy` - server group policy. See `vkcs_compute_servergroup`'s `policy` argument for available values. If no specified the server group is not created.<br/>`availability_zones` - list of availability zones to spread VMs. If no specified `availability_zone` must be set at the root level. If the list contains lesser elements that cluster.size, the elements are used for VMs in cycle. | <pre>object({<br/>    size               = number<br/>    servergroup_name   = optional(string)<br/>    servergroup_policy = optional(string)<br/>    availability_zones = optional(list(string))<br/>  })</pre> | `null` | no |
+| <a name="input_availability_zone"></a> [availability\_zone](#input\_availability\_zone) | The availability zone in which to create VM or cluster. Conflicts with `cluster.availability_zones`. | `string` | `null` | no |
+| <a name="input_flavor_name"></a> [flavor\_name](#input\_flavor\_name) | The name of the desired flavor for the server. Required if `flavor_id` is empty. | `string` | `null` | no |
+| <a name="input_flavor_id"></a> [flavor\_id](#input\_flavor\_id) | The flavor ID of the desired flavor for the server. Required if `flavor_name` is empty. | `string` | `null` | no |
+| <a name="input_volumes"></a> [volumes](#input\_volumes) | Configuration for the boot volume.<br/>See `vkcs_blockstorage_volume` arguments for details. If name is not set it is assigned to `name` module variable.<br/>At least one volume must be specified. The first volume requires `image_id`. | <pre>list(object({<br/>    name        = optional(string)<br/>    description = optional(string)<br/>    type        = string<br/>    size        = number<br/>    image_id    = optional(string)<br/>  }))</pre> | n/a | yes |
+| <a name="input_ports"></a> [ports](#input\_ports) | List of ports to create and attach to instances.<br/>See `vkcs_networking_port` arguments for details. If name is not set it is assigned to `name` module variable.<br/>`subnet_id` and `ip_address` - arguments for the first `fixed_ips` element in `vkcs_networking_port`. Next elements are not supported by the module.<br/>`floatingip_pool` - allocate and associate floating IP to the port. Specify external network name or set `true` if the only external netwrok is available in the project.<br/>`floatingip_description` - `description` argument for `vkcs_networking_floatingip` resource.<br/>At least one port must be specified. | <pre>list(object({<br/>    network_id         = string<br/>    tags               = optional(list(string))<br/>    name               = optional(string)<br/>    description        = optional(string)<br/>    subnet_id          = optional(string)<br/>    ip_address         = optional(string)<br/>    security_group_ids = optional(list(string))<br/>    allowed_address_pairs = optional(list(object({<br/>      ip_address  = string<br/>      mac_address = optional(string)<br/>    })))<br/>    mac_address            = optional(string)<br/>    floatingip_pool        = optional(any)<br/>    floatingip_description = optional(string)<br/>  }))</pre> | n/a | yes |
 | <a name="input_cloud_monitoring"></a> [cloud\_monitoring](#input\_cloud\_monitoring) | The settings of the cloud monitoring. | <pre>object({<br/>    script          = string<br/>    service_user_id = string<br/>  })</pre> | `null` | no |
-| <a name="input_config_drive"></a> [config\_drive](#input\_config\_drive) | Whether to use the config\_drive feature to configure the instance. | `bool` | `null` | no |
-| <a name="input_data_volumes"></a> [data\_volumes](#input\_data\_volumes) | List of data volume configurations.<br/>Names will be {name}-{instance\_index}-{volume\_index}. | <pre>list(object({<br/>    name        = optional(string)<br/>    description = optional(string)<br/>    type        = string<br/>    size        = number<br/>  }))</pre> | `null` | no |
-| <a name="input_enable_backup_plan"></a> [enable\_backup\_plan](#input\_enable\_backup\_plan) | Enables or disables creation of backup plan.<br/>If `true`: Creates backup plan using custom or default settings.<br/>If `false`: No backup plan is created. | `bool` | `true` | no |
-| <a name="input_ext_net_name"></a> [ext\_net\_name](#input\_ext\_net\_name) | Name of the external network. Needs for create fips.<br/>If not specified, fips will not be created. | `string` | `null` | no |
-| <a name="input_flavor_id"></a> [flavor\_id](#input\_flavor\_id) | The flavor ID of the desired flavor for the server. Required if flavor\_name is empty. | `string` | `null` | no |
-| <a name="input_flavor_name"></a> [flavor\_name](#input\_flavor\_name) | The name of the desired flavor for the server. Required if flavor\_id is empty. | `string` | `null` | no |
-| <a name="input_instances_count"></a> [instances\_count](#input\_instances\_count) | Number of VM instances to create | `number` | n/a | yes |
 | <a name="input_key_pair"></a> [key\_pair](#input\_key\_pair) | The name of a key pair to put on the server. | `string` | `null` | no |
-| <a name="input_name"></a> [name](#input\_name) | Name for instances and module resources.<br/>You can omit the resource names, and this name will be used for them. | `string` | n/a | yes |
+| <a name="input_config_drive"></a> [config\_drive](#input\_config\_drive) | Whether to use the config\_drive feature to configure the instance. | `bool` | `null` | no |
 | <a name="input_personality"></a> [personality](#input\_personality) | Customize the personality of an instance by defining one or more files and their contents. | <pre>list(object({<br/>    content = string<br/>    file    = string<br/>  }))</pre> | `null` | no |
-| <a name="input_ports"></a> [ports](#input\_ports) | List of ports to create and attach to instances.<br/>See `vkcs_networking_port` arguments.<br/>Names will be {name}-{instance\_index}-{port\_index}. | <pre>list(object({<br/>    network_id = string<br/>    allowed_address_pairs = optional(list(object({<br/>      ip_address  = string<br/>      mac_address = optional(string)<br/>    })))<br/>    description = optional(string)<br/>    dns_name    = optional(string)<br/>    fixed_ips = optional(list(object({<br/>      subnet_id  = string<br/>      ip_address = optional(string)<br/>    })))<br/>    full_security_groups_control = optional(bool, true)<br/>    mac_address                  = optional(string)<br/>    name                         = optional(string)<br/>    no_fixed_ip                  = optional(bool)<br/>    security_group_ids           = optional(list(string))<br/>    tags                         = optional(list(string))<br/>  }))</pre> | `[]` | no |
-| <a name="input_region"></a> [region](#input\_region) | The region in which to create the server instance. | `string` | `null` | no |
-| <a name="input_sdn"></a> [sdn](#input\_sdn) | SDN to use for this resource. | `string` | `null` | no |
-| <a name="input_server_group"></a> [server\_group](#input\_server\_group) | Configuration for creating a server group.<br/>`policy` needs for `vkcs_compute_servergroup.policies`<br/>See `vkcs_compute_servergroup` arguments. | <pre>object({<br/>    name   = optional(string)<br/>    policy = optional(set(string))<br/>  })</pre> | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | Tags for the instance. These tags will be added to resource's tags. | `set(string)` | `[]` | no |
 | <a name="input_user_data"></a> [user\_data](#input\_user\_data) | The user data to provide when launching the instance. | `string` | `null` | no |
+| <a name="input_admin_pass"></a> [admin\_pass](#input\_admin\_pass) | The administrative password to assign to the server. | `string` | `null` | no |
 | <a name="input_vendor_options"></a> [vendor\_options](#input\_vendor\_options) | Map of additional vendor-specific options.<br/>`ignore_resize_confirmation` is `true` by default. | <pre>object({<br/>    detach_ports_before_destroy = optional(bool)<br/>    get_password_data           = optional(bool)<br/>    ignore_resize_confirmation  = optional(bool)<br/>  })</pre> | <pre>{<br/>  "ignore_resize_confirmation": true<br/>}</pre> | no |
+| <a name="input_backup_plan"></a> [backup\_plan](#input\_backup\_plan) | Configuration for backup plan.<br/>See `vkcs_backup_plan` arguments. If name is not set it is assigned to `name` module variable. | <pre>object({<br/>    name               = optional(string)<br/>    incremental_backup = bool<br/>    schedule = object({<br/>      date        = optional(list(string))<br/>      every_hours = optional(number)<br/>      time        = optional(string)<br/>    })<br/>    full_retention = optional(object({<br/>      max_full_backup = number<br/>    }))<br/>    gfs_retention = optional(object({<br/>      gfs_weekly  = number<br/>      gfs_monthly = optional(number)<br/>      gfs_yearly  = optional(number)<br/>    }))<br/>  })</pre> | <pre>{<br/>  "gfs_retention": {<br/>    "gfs_monthly": 12,<br/>    "gfs_weekly": 4,<br/>    "gfs_yearly": 5<br/>  },<br/>  "incremental_backup": true,<br/>  "schedule": {<br/>    "date": [<br/>      "Sa"<br/>    ],<br/>    "time": "22:00+03"<br/>  }<br/>}</pre> | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_backup_plan_id"></a> [backup\_plan\_id](#output\_backup\_plan\_id) | Id of the backup plan. |
 | <a name="output_instances"></a> [instances](#output\_instances) | List of the instances info. |
-| <a name="output_server_group_id"></a> [server\_group\_id](#output\_server\_group\_id) | Id of the server group. |
+| <a name="output_servergroup_id"></a> [servergroup\_id](#output\_servergroup\_id) | Server group ID. |
+| <a name="output_backup_plan_id"></a> [backup\_plan\_id](#output\_backup\_plan\_id) | Backup plan ID. |
 <!-- END_TF_DOCS -->
