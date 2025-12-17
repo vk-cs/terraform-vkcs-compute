@@ -1,5 +1,6 @@
 module "network" {
-  source = "../../../terraform-vkcs-network"
+  source = "vk-cs/network/vkcs"
+  version = "~> 0.0.1"
 
   tags = ["tf-example"]
   name = "full-tf-example"

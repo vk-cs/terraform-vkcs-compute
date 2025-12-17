@@ -24,6 +24,7 @@ It does not support:
 ```hcl
 module "simple_compute" {
   source = "vk-cs/compute/vkcs"
+  version = "0.0.1"
 
   name              = "simple-compute-tf-example"
   availability_zone = "GZ1"

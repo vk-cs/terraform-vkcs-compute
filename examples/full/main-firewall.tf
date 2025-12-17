@@ -1,5 +1,6 @@
 module "firewall_admin" {
-  source = "../../../terraform-vkcs-firewall"
+  source = "vk-cs/firewall/vkcs"
+  version = "~> 0.0.1"
 
   name        = "admin-tf-example"
   description = "Admin access. Full firewall TF module example."
@@ -21,7 +22,8 @@ module "firewall_admin" {
 }
 
 module "firewall_http" {
-  source = "../../../terraform-vkcs-firewall"
+  source = "vk-cs/firewall/vkcs"
+  version = "~> 0.0.1"
 
   name        = "http-tf-example"
   description = "HTTP access. Full firewall TF module example."
@@ -53,7 +55,8 @@ module "firewall_http" {
 }
 
 module "firewall_vrrp" {
-  source = "../../../terraform-vkcs-firewall"
+  source = "vk-cs/firewall/vkcs"
+  version = "~> 0.0.1"
 
   name                 = "vrrp-tf-example"
   description          = "VRRP internal firewall. Full firewall TF module example"
