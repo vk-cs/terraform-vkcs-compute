@@ -1,5 +1,5 @@
 module "simple_compute" {
-  source = "../../"
+  source = "vk-cs/compute/vkcs"
 
   name              = "simple-compute-tf-example"
   availability_zone = "GZ1"

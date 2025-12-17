@@ -1,5 +1,5 @@
 module "full_compute" {
-  source = "../../"
+  source = "vk-cs/compute/vkcs"
 
   tags = ["tf-example"]
   name = "full-compute-tf-example"
