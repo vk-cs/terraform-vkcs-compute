@@ -1,5 +1,6 @@
 module "firewall_all" {
-  source = "../../../terraform-vkcs-firewall"
+  source = "vk-cs/firewall/vkcs"
+  version = "~> 0.0.1"
 
   name = "all-tf-example"
 
