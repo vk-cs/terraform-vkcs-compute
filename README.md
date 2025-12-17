@@ -23,7 +23,7 @@ It does not support:
 ### Enable all traffic
 ```hcl
 module "simple_compute" {
-  source = "../../"
+  source = "vk-cs/compute/vkcs"
 
   name              = "simple-compute-tf-example"
   availability_zone = "GZ1"
@@ -45,7 +45,7 @@ module "simple_compute" {
 You can find examples in the [`examples`](./examples) directory on [GitHub](https://github.com/vk-cs/terraform-vkcs-compute/tree/v0.0.1/examples).
 
 Running an example:
-- Clone [GitHub repository](https://github.com/vk-cs/terraform-vkcs-compute/v0.0.1/main)
+- Clone [GitHub repository](https://github.com/vk-cs/terraform-vkcs-compute) and checkout tag v0.0.1.
 - [Install Terraform](https://cloud.vk.com/docs/en/tools-for-using-services/terraform/quick-start). **Note**: You do not need `vkcs_provider.tf` to run module example.
 - [Init Terraform](https://cloud.vk.com/docs/en/tools-for-using-services/terraform/quick-start#terraform_initialization) from the example folder.
 - [Run Terraform](https://cloud.vk.com/docs/en/tools-for-using-services/terraform/quick-start#creating_resources_via_terraform) to create example resources.
@@ -291,7 +291,7 @@ Default:
 
 ### <a name="input_backup_plan"></a> [backup\_plan](#input\_backup\_plan)
 
-Description: Configuration for backup plan.  
+Description: Configuration for backup plan.
 
 See `vkcs_backup_plan` arguments. If name is not set it is assigned to `name` module variable.
 
