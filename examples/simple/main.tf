@@ -1,6 +1,8 @@
 module "simple_compute" {
-  source = "vk-cs/compute/vkcs"
-  version = "0.0.1"
+  source = "https://github.com/vk-cs/terraform-vkcs-compute/archive/refs/tags/v0.0.2.zip//terraform-vkcs-compute-0.0.2"
+  # Alternatively you may refer right to Hashicorp module repository if you have access to it
+  # source = "vk-cs/compute/vkcs"
+  # version = "0.0.2"
 
   name              = "simple-compute-tf-example"
   availability_zone = "GZ1"
