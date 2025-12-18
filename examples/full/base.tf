@@ -19,3 +19,7 @@ resource "vkcs_networking_port" "cluster_vip" {
   }
   full_security_groups_control = true
 }
+
+resource "vkcs_compute_keypair" "key_pair" {
+  name = "full-compute-tf-example"
+}

@@ -8,7 +8,7 @@ This modules makes it easy to setup virtual machines in VKCS.
 
 It supports creating:
 - compute servergroup
-- compute instances
+- compute instances (VMs)
 - blockstorage volumes
 - network ports
 - network floatingips (associated with the ports)
@@ -20,11 +20,13 @@ It does not support:
 - adding new volumes
 
 ## Usage
-### Enable all traffic
+### Simple VM
 ```hcl
 module "simple_compute" {
-  source = "vk-cs/compute/vkcs"
-  version = "0.0.1"
+  source = "https://github.com/vk-cs/terraform-vkcs-compute/archive/refs/tags/v0.0.2.zip//terraform-vkcs-compute-0.0.2"
+  # Alternatively you may refer right to Hashicorp module repository if you have access to it
+  # source = "vk-cs/compute/vkcs"
+  # version = "0.0.2"
 
   name              = "simple-compute-tf-example"
   availability_zone = "GZ1"
@@ -41,12 +43,18 @@ module "simple_compute" {
   }]
 }
 ```
+```hcl
+output "simple_compute" {
+  value = module.simple_compute
+}
+```
 
 ## Examples
-You can find examples in the [`examples`](./examples) directory on [GitHub](https://github.com/vk-cs/terraform-vkcs-compute/tree/v0.0.1/examples).
+You can find examples in the [`examples`](./examples) directory on [GitHub](https://github.com/vk-cs/terraform-vkcs-compute/tree/v0.0.2/examples).
 
 Running an example:
-- Clone [GitHub repository](https://github.com/vk-cs/terraform-vkcs-compute) and checkout tag v0.0.1.
+- Clone [GitHub repository](https://github.com/vk-cs/terraform-vkcs-compute) and checkout tag v0.0.2.
+  Or get [module archive](https://github.com/vk-cs/terraform-vkcs-compute/archive/refs/tags/v0.0.2.zip) and unpack it.
 - [Install Terraform](https://cloud.vk.com/docs/en/tools-for-using-services/terraform/quick-start). **Note**: You do not need `vkcs_provider.tf` to run module example.
 - [Init Terraform](https://cloud.vk.com/docs/en/tools-for-using-services/terraform/quick-start#terraform_initialization) from the example folder.
 - [Run Terraform](https://cloud.vk.com/docs/en/tools-for-using-services/terraform/quick-start#creating_resources_via_terraform) to create example resources.

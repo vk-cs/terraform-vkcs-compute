@@ -1,6 +1,5 @@
 module "full_compute" {
-  source = "vk-cs/compute/vkcs"
-  version = "0.0.1"
+  source = "https://github.com/vk-cs/terraform-vkcs-compute/archive/refs/tags/v0.0.2.zip//terraform-vkcs-compute-0.0.2"
 
   tags = ["tf-example"]
   name = "full-compute-tf-example"
@@ -8,7 +7,7 @@ module "full_compute" {
     size               = 3
     servergroup_name   = "cluster-tf-example"
     servergroup_policy = "anti-affinity"
-    availability_zones = ["GZ1", "MS1"]  # Count of zones can be less than cluster size
+    availability_zones = ["GZ1", "MS1"] # Count of zones can be less than cluster size
   }
   flavor_name = "STD3-1-2"
   volumes = [
@@ -68,6 +67,7 @@ module "full_compute" {
     service_user_id = vkcs_cloud_monitoring.base.service_user_id
     script          = vkcs_cloud_monitoring.base.script
   }
+  key_pair     = vkcs_compute_keypair.key_pair.name
   config_drive = true
   personality = [{
     file    = "/opt/app/config.json"
