@@ -1,4 +1,4 @@
-data "vkcs_images_image" "debian" {
+data "vkcs_images_image" "base" {
   visibility = "public"
   default    = true
   properties = {

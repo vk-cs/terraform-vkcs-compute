@@ -1,5 +1,5 @@
 module "full_compute" {
-  source = "https://github.com/vk-cs/terraform-vkcs-compute/archive/refs/tags/v0.0.2.zip//terraform-vkcs-compute-0.0.2"
+  source = "https://github.com/vk-cs/terraform-vkcs-compute/archive/refs/tags/v0.0.3.zip//terraform-vkcs-compute-0.0.3"
 
   tags = ["tf-example"]
   name = "full-compute-tf-example"

@@ -1,14 +1,14 @@
 module "simple_compute" {
-  source = "https://github.com/vk-cs/terraform-vkcs-compute/archive/refs/tags/v0.0.2.zip//terraform-vkcs-compute-0.0.2"
+  source = "https://github.com/vk-cs/terraform-vkcs-compute/archive/refs/tags/v0.0.3.zip//terraform-vkcs-compute-0.0.3"
   # Alternatively you may refer right to Hashicorp module repository if you have access to it
   # source = "vk-cs/compute/vkcs"
-  # version = "0.0.2"
+  # version = "0.0.3"
 
   name              = "simple-compute-tf-example"
   availability_zone = "GZ1"
   flavor_name       = "STD3-1-2"
   volumes = [{
-    image_id = data.vkcs_images_image.debian.id
+    image_id = data.vkcs_images_image.base.id
     type     = "ceph-ssd"
     size     = 10
   }]

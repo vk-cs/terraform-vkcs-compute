@@ -1,5 +1,5 @@
 module "firewall_admin" {
-  source = "https://github.com/vk-cs/terraform-vkcs-firewall/archive/refs/tags/v0.0.2.zip//terraform-vkcs-firewall-0.0.2"
+  source = "https://github.com/vk-cs/terraform-vkcs-firewall/archive/refs/tags/v0.0.3.zip//terraform-vkcs-firewall-0.0.3"
 
   name        = "admin-tf-example"
   description = "Admin access. Full firewall TF module example."
@@ -21,7 +21,7 @@ module "firewall_admin" {
 }
 
 module "firewall_http" {
-  source = "https://github.com/vk-cs/terraform-vkcs-firewall/archive/refs/tags/v0.0.2.zip//terraform-vkcs-firewall-0.0.2"
+  source = "https://github.com/vk-cs/terraform-vkcs-firewall/archive/refs/tags/v0.0.3.zip//terraform-vkcs-firewall-0.0.3"
 
   name        = "http-tf-example"
   description = "HTTP access. Full firewall TF module example."
@@ -53,7 +53,7 @@ module "firewall_http" {
 }
 
 module "firewall_vrrp" {
-  source = "https://github.com/vk-cs/terraform-vkcs-firewall/archive/refs/tags/v0.0.2.zip//terraform-vkcs-firewall-0.0.2"
+  source = "https://github.com/vk-cs/terraform-vkcs-firewall/archive/refs/tags/v0.0.3.zip//terraform-vkcs-firewall-0.0.3"
 
   name                 = "vrrp-tf-example"
   description          = "VRRP internal firewall. Full firewall TF module example"
@@ -66,6 +66,7 @@ module "firewall_vrrp" {
       direction       = "egress"
       protocol        = "vrrp"
       remote_group_id = module.firewall_vrrp.secgroup_id
+      resource_key    = "egress-vrrp"
     },
     {
       direction        = "egress"
@@ -76,17 +77,19 @@ module "firewall_vrrp" {
       direction       = "ingress"
       protocol        = "vrrp"
       remote_group_id = module.firewall_vrrp.secgroup_id
+      resource_key    = "ingress-vrrp"
     },
     {
       direction        = "egress"
       protocol         = "udp"
-      port             = "53"
+      port             = 53
       remote_ip_prefix = "0.0.0.0/32"
     },
     {
       direction        = "ingress"
       protocol         = "udp"
-      port             = "53"
+      port_range_min   = 49152
+      port_range_max   = 65535
       remote_ip_prefix = "0.0.0.0/32"
     },
   ]

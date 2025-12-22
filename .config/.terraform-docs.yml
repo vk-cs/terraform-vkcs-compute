@@ -53,7 +53,7 @@ content: |-
   {{ include "examples/simple/main.tf" }}
   ```
   ```hcl
-  {{ include "examples/simple/outputs.tf" }}
+  {{ include "examples/simple/output.tf" }}
   ```
 
   ## Examples
